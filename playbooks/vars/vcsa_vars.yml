@@ -1,0 +1,13 @@
+esxi_address: '172.16.108.20'       # ESXi Host IP Address or DNS Resolvable hostname
+esxi_username: 'root'               # The root user on the ESXi host
+esxi_password: 'VMware1!'           # The root user password on the ESXi host
+vcenter_password: 'VMware1!'        # The password for the vCenter Server Appliance root user and the SSO domain password for administrator@vsphere.local
+vcenter_hostname: 'vcsa'            # The NetBiOS name of the VCenter Server Appliance
+vcenter_address: '172.16.108.22'    # The IP address of the vCenter Server Appliance
+net_prefix: '24'                    # The network CIDR prefix
+net_gateway: '172.16.108.2'         # The default gateway IP address
+dns_servers: '172.16.108.21'        # Comma separated list of DNS server IP addresses
+domain: 'demo.lab'                  # The domain name, if any, for the vCenter Server Appliance FQDN. Also used for setting up domain authentication on the vCenter Server Appliance
+searchpath: ""                      # An OU search path
+vcsa_size: 'tiny'                   # The vCenter Server Appliance deployment size
+vcsa_ova_file: '{{ ova_file }}'     # DEPRECATED: This variable is hard-coded into the role that this playbook calls.
