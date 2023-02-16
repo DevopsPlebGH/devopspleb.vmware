@@ -1,0 +1,4 @@
+---
+- hosts: localhost
+  name: Deploy vCenter Server Appliance with Embedded Platform Services Controller to an ESXi host
+  gather_facts: false

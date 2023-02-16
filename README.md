@@ -1,2 +1,3 @@
-# devopspleb.vmware
-Ansible Collection for managing VMware Infrastructure
+# Ansible Collection - devopspleb.vmware
+
+Documentation for the collection.
