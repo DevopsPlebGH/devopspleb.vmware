@@ -1,0 +1,3 @@
+[submodule "roles/vCenterServer"]
+	path = roles/vCenterServer
+	url = https://github.com/DevopsPlebGH/vCenter-Ansible-Role.git
