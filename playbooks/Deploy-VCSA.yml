@@ -5,4 +5,5 @@
   vars_files:
     vcsa_vars.yml
   roles:
+    - role: vCenterServer
   
