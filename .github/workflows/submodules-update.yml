@@ -1,3 +1,4 @@
+---
 name: Update module
 on:
   repository_dispatch:
