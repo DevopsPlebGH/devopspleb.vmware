@@ -1,0 +1,168 @@
+---
+- name: Phase 1 - Ubuntu CIS Level 1 Server
+  hosts: all
+  gather_facts: false
+
+  pre_tasks:
+    - name: Gathering required facts
+      ansible.builtin.setup:
+        gather_subset:
+          - distribution_release
+
+    - name: Install dependencies
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        install_recommends: false
+        state: present
+      with_items:
+        - gnupg-agent
+        - software-properties-common
+
+    - name: Adding ppa:git-core/ppa
+      ansible.builtin.apt_repository:
+        repo: ppa:git-core/ppa
+        state: present
+
+    - name: Updating apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Installing remaining depencies
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        install_recommends: false
+        state: present
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - acl
+        - bzip2
+        - ca-certificates
+        - file
+        - fonts-dejavu-core
+        - g++
+        - gawk
+        - git
+        - less
+        - libz-dev
+        - locales
+        - make
+        - netbase
+        - patch
+        - sudo
+        - uuid-runtime
+        - tzdata
+        - jq
+
+    - name: Install gpg if distribution release is greater-than-equal to 18
+      ansible.builtin.apt:
+        name: gpg
+        state: present
+      when: ansible_distribution_release >= '18'
+
+    - name: Removing software-properties-common
+      ansible.builtin.apt:
+        name: software-properties-common
+        purge: true
+        state: absent
+
+    - name: Removing other packages
+      ansible.builtin.apt:
+        purge: true
+        autoremove: true
+        state: absent
+
+    - name: Collect package lists
+      ansible.builtin.find:
+        paths: /var/lib/apt/lists
+        hidden: true
+        recurse: true
+        file_type: any
+      register: collected_files
+
+    #- name: Removing package lists
+    #  ansible.builtin.file:
+    #    path: '{{ item.path }}'
+    #    state: absent
+    #  with_items: '{{ collected_files }}'
+
+    - name: Setting locale
+      ansible.builtin.command:
+        cmd: localedef -i en_US -f UTF-8 en_US.UTF-8
+
+  tasks:
+    - name: Setting up linuxbrew user and group and setting up permissions
+      block:
+        - name: Creating linuxbrew group
+          ansible.builtin.group:
+            name: linuxbrew
+            gid: 1000
+            state: present
+
+        - name: Creating linuxbrew user
+          ansible.builtin.user:
+            name: linuxbrew
+            shell: /bin/bash
+            comment: "Linuxbrew User"
+            group: linuxbrew
+            createhome: yes
+            home: /home/linuxbrew
+            state: present
+
+        - name: Creating Homebrew Directories
+          ansible.builtin.file:
+            path: '{{ item }}'
+            owner: linuxbrew
+            group: linuxbrew
+            state: directory
+            mode: '0755'
+          with_items:
+            - /home/linuxbrew/.linuxbrew/bin
+            - /home/linuxbrew/.linuxbrew/etc
+            - /home/linuxbrew/.linuxbrew/include
+            - /home/linuxbrew/.linuxbrew/lib
+            - /home/linuxbrew/.linuxbrew/opt
+            - /home/linuxbrew/.linuxbrew/sbin
+            - /home/linuxbrew/.linuxbrew/share
+            - /home/linuxbrew/.linuxbrew/var/homebrew/linked
+            - /home/linuxbrew/.linuxbrew/Cellar
+            - /home/linuxbrew/.linuxbrew/Homebrew
+            - /home/linuxbrew/.linuxbrew/etc/bash_completion.d
+            - /home/linuxbrew/.linuxbrew/share/doc
+            - /home/linuxbrew/.linuxbrew/share/man
+            - /home/linuxbrew/.linuxbrew/share/man/man1
+            - /home/linuxbrew/.linuxbrew/share/zsh
+            - /home/linuxbrew/.linuxbrew/share/zsh/site-functions
+            - /home/linuxbrew/.linuxbrew/var/homebrew/locks
+
+    - name: Installing and Configuring Homebrew
+      block:
+        - name: Installing Homebrew
+          ansible.builtin.shell: |
+            NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+        - name: Setting linuxbrew directory ownership
+          ansible.builtin.file:
+            path: /home/linuxbrew
+            owner: linuxbrew
+            group: linuxbrew
+            state: directory
+            recurse: yes
+
+        - name: Checking if brew binary exists
+          ansible.builtin.stat:
+            path: /home/linuxbrew/.linuxbrew/bin/brew
+          register: brew_binary_path
+
+        - name: Setting limited sudo permissions for linuxbrew user
+          community.general.sudoers:
+            name: linuxbrew
+            group: linuxbrew
+            nopassword: yes
+            commands: '{{ item }}'
+            state: present
+          with_items:
+            - '{{ brew_binary_path.stat.path }}'
+          when: brew_binary_path.stat.exists == true
+

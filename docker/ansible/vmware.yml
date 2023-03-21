@@ -1,0 +1,26 @@
+---
+- hosts: all
+  gather_facts: false
+  environment:
+    PATH: /home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:{{ ansible_env.PATH }}
+
+  tasks:
+    - name: Gathering Ansible Environment Facts
+      ansible.builtin.setup:
+        gather_subset:
+          - env
+
+    - name: Updating Homebrew
+      community.general.homebrew:
+        update_homebrew: true
+
+    - name: Installing Zsh
+      community.general.homebrew:
+        name: zsh
+        state: present
+
+    - name: Installing Oh-My-Posh
+      community.general.homebrew:
+        name: jandedobbeleer/oh-my-posh/oh-my-posh
+        state: present
+

@@ -1,5 +1,8 @@
-.PHONY: run
+.PHONY: install_collection
 
-run:
-	@docker run ubuntu:latest \
-
+install_collection:
+    @docker run --rm \
+        -v $(CURDIR):/devopspleb_ansible \
+        -w /devopspleb_ansible \
+        devopspleb/ansible-vsphere-runner \
+        ansible-galaxy install -r requirements.yml

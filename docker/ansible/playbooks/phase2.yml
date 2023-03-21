@@ -1,0 +1,45 @@
+---
+- name: Phase 2 - Ubuntu CIS Level 1 Server
+  hosts: all
+  gather_facts: false
+  environment:
+    PATH: /home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:{{ ansible_env.PATH }}
+
+  tasks:
+    - name: Setting up Homebrew and Ansible
+      block:
+        - name: Gathering Ansible Facts
+          ansible.builtin.setup:
+            gather_subset:
+              - env
+
+        - name: Update Homebrew
+          community.general.homebrew:
+            update_homebrew: true
+            state: latest
+
+        - name: Installing Ansible
+          community.general.homebrew:
+            name: '{{ item }}'
+            state: present
+            update_homebrew: false
+          with_items:
+            - ansible
+            - zsh
+            - jandedobbeleer/oh-my-posh/oh-my-posh
+
+        - name: Register ansible installation status
+          ansible.builtin.command:
+            cmd: which ansible
+          changed_when: false
+          failed_when: ansible_installed.rc not in [0,1]
+          register: ansible_installed
+
+      rescue:
+        - name: Return "FAIL" if ansible is not installed
+          ansible.builtin.fail:
+            msg: "Ansible is not installed."
+          when: ansible_installed.rc not in [0]
+
+
+
